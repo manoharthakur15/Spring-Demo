@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -11,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,26 +34,28 @@ public class MainController {
 		return "home";
 	}
 
-//	@RequestMapping("/home")
-//	public String homee(Model m) {
-//		List<Student> students = studentDao.getStudents();
-//		m.addAttribute("students", students);
-//		return "home";
-//	}
-
 	@RequestMapping("/add-student")
 	public String addStudent(Model m) {
-		m.addAttribute("title", "Add Student");
+		m.addAttribute("student", new Student());
 		return "addStudent";
 	}
 
 	@RequestMapping(value = "/handle-student", method = RequestMethod.POST)
-	public RedirectView handleStudent(@ModelAttribute Student student, HttpServletRequest request) {
-		System.out.println(student);
+	public String handleStudent(@Valid @ModelAttribute("student") Student student, BindingResult result,
+			HttpServletRequest request, Model m) {
+		System.out.println("result: " + result);
+		if (result.hasErrors()) {
+			System.out.println("I'm in if");
+//			RedirectView redirectView = new RedirectView();
+//			redirectView.setUrl(request.getContextPath() + "/addStudent");
+			return "addStudent";
+		}
+//		RedirectView redirectView = new RedirectView();
+//		redirectView.setUrl(request.getContextPath() + "/");
 		studentDao.createStudent(student);
-		RedirectView redirectView = new RedirectView();
-		redirectView.setUrl(request.getContextPath() + "/");
-		return redirectView;
+		List<Student> students = studentDao.getStudents();
+		m.addAttribute("students", students);
+		return "home";
 	}
 
 	@RequestMapping("/delete/{studentId}")
